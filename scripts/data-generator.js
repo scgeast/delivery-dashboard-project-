@@ -1,3 +1,5 @@
+// data-generator.js - Versi diperbaiki
+
 // Generator data contoh untuk Dashboard Delivery Order
 class DataGenerator {
     constructor() {
@@ -52,18 +54,34 @@ class DataGenerator {
 
     // Generate file Excel dari data
     generateExcelFile(data, filename = 'sample-data.xlsx') {
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Delivery Data');
-        XLSX.writeFile(workbook, filename);
+        try {
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Delivery Data');
+            XLSX.writeFile(workbook, filename);
+            return true;
+        } catch (error) {
+            console.error('Error generating Excel file:', error);
+            return false;
+        }
     }
 
     // Generate data dan download file Excel
     generateAndDownload() {
-        const sampleData = this.generateSampleData(1000);
-        this.generateExcelFile(sampleData, 'delivery-sample-data.xlsx');
-        if (typeof showSuccess === 'function') {
-            showSuccess('Sample data generated and downloaded successfully!');
+        try {
+            const sampleData = this.generateSampleData(1000);
+            const success = this.generateExcelFile(sampleData, 'delivery-sample-data.xlsx');
+            
+            if (success && typeof showSuccess === 'function') {
+                showSuccess('Sample data generated and downloaded successfully!');
+            } else if (!success) {
+                throw new Error('Failed to generate Excel file');
+            }
+        } catch (error) {
+            console.error('Error generating sample data:', error);
+            if (typeof showError === 'function') {
+                showError('Error generating sample data: ' + error.message);
+            }
         }
     }
 
@@ -86,6 +104,48 @@ class DataGenerator {
     getRandomDate(start, end) {
         const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
         return date.toISOString().split('T')[0];
+    }
+}
+
+// Fungsi untuk menggunakan sample data di UI
+function useSampleData() {
+    try {
+        showLoading();
+        
+        const generator = new DataGenerator();
+        const sampleData = generator.generateForUI(300);
+        
+        // Set global variables
+        window.rawData = sampleData;
+        window.filteredData = [...window.rawData];
+        
+        // Update UI components
+        if (typeof updateFilterOptions === 'function') {
+            updateFilterOptions();
+        }
+        
+        if (typeof updateKPIs === 'function') {
+            updateKPIs();
+        }
+        
+        if (typeof updateCharts === 'function') {
+            updateCharts();
+        }
+        
+        hideLoading();
+        
+        if (typeof showSuccess === 'function') {
+            showSuccess('Sample data loaded successfully! Use filters to explore the data.');
+        }
+        
+        console.log('Sample data loaded:', sampleData);
+    } catch (error) {
+        console.error('Error loading sample data:', error);
+        hideLoading();
+        
+        if (typeof showError === 'function') {
+            showError('Error loading sample data: ' + error.message);
+        }
     }
 }
 
@@ -119,72 +179,46 @@ function addDataGeneratorToUI() {
     generatorContainer.appendChild(sampleDataBtn);
     generatorContainer.appendChild(infoText);
 
-    const uploadArea = document.querySelector('.upload-area');
+    // Tempatkan di UI - cari tempat yang sesuai
+    const uploadArea = document.querySelector('.upload-area') || document.querySelector('.card') || document.body;
     if (uploadArea) {
         uploadArea.parentNode.insertBefore(generatorContainer, uploadArea.nextSibling);
     }
 }
 
-// Fungsi untuk menggunakan sample data
-function useSampleData() {
+// Initialize dengan event listener yang aman
+function initDataGenerator() {
     try {
-        const generator = new DataGenerator();
-        const sampleData = generator.generateForUI(300);
+        // Tambahkan UI elements
+        addDataGeneratorToUI();
         
-        window.rawData = sampleData;
-        window.filteredData = [...window.rawData];
-        
-        if (typeof updateFilterOptions === 'function') {
-            updateFilterOptions();
+        // Setup event listeners jika ada element dengan ID tertentu
+        const sampleBtn = document.getElementById('sampleDataBtn');
+        if (sampleBtn) {
+            sampleBtn.addEventListener('click', useSampleData);
         }
         
-        if (typeof processData === 'function') {
-            processData();
-        }
-        
-        if (typeof showSuccess === 'function') {
-            showSuccess('Sample data loaded successfully! Use filters to explore the data.');
-        }
+        console.log("Data generator initialized successfully");
     } catch (error) {
-        console.error('Error loading sample data:', error);
-        if (typeof showError === 'function') {
-            showError('Error loading sample data. Please check console for details.');
-        }
+        console.error("Error initializing data generator:", error);
     }
 }
 
-// Style CSS untuk generator button
-const generatorStyles = `
-.generator-container {
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    border: 1px dashed #17a2b8;
-    margin-bottom: 20px;
-}
+// Pastikan DOM sudah loaded sebelum initializing
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded, initializing data generator");
+    setTimeout(initDataGenerator, 100);
+});
 
-#data-generator-btn {
-    background-color: #17a2b8;
-    border-color: #17a2b8;
-}
+// Juga initialize ketika window fully loaded
+window.addEventListener('load', function() {
+    console.log("Window fully loaded, initializing data generator");
+    initDataGenerator();
+});
 
-#data-generator-btn:hover {
-    background-color: #138496;
-    border-color: #117a8b;
-}
+// Export untuk global usage
+window.DataGenerator = DataGenerator;
+window.useSampleData = useSampleData;
+window.initDataGenerator = initDataGenerator;
 
-#sample-data-btn {
-    border-color: #0d6efd;
-    color: #0d6efd;
-}
-
-#sample-data-btn:hover {
-    background-color: #0d6efd;
-    color: white;
-}
-`;
-
-// Tambahkan style ke document
-const styleSheet = document.createElement('style');
-styleSheet.textContent = generatorStyles;
-document.head.appendChild(styleSheet);
+console.log("Data generator loaded successfully");
