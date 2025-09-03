@@ -35,10 +35,9 @@ function handleFileUpload(event) {
             // Proses data dan update dashboard
             processData();
             
-            hideLoading();
         } catch (error) {
             hideLoading();
-            showError(`Error membaca file: ${error.message}`);
+            showError('Error membaca file: ' + error.message);
             console.error('Error processing file:', error);
         }
     };
@@ -49,6 +48,24 @@ function handleFileUpload(event) {
     };
     
     reader.readAsArrayBuffer(file);
+}
+
+// Validasi data yang dibaca dari Excel
+function validateData(data) {
+    if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('Data tidak valid atau kosong');
+    }
+    
+    // Cek kolom yang diperlukan
+    const requiredColumns = ['Area', 'DP Date', 'DP No', 'Plant Name', 'QTY', 'Truck No', 'Sales Man', 'Distance', 'End Customer Name'];
+    const firstRow = data[0];
+    
+    const missingColumns = requiredColumns.filter(col => !firstRow.hasOwnProperty(col));
+    if (missingColumns.length > 0) {
+        throw new Error(`Kolom yang diperlukan tidak ditemukan: ${missingColumns.join(', ')}`);
+    }
+    
+    return true;
 }
 
 // Update opsi filter
@@ -200,13 +217,6 @@ function resetFilters() {
     
     filteredData = [...rawData];
     processData();
-}
-
-// Proses data dan update dashboard
-function processData() {
-    updateLastUpdateTime();
-    updateKPIs();
-    updateCharts();
 }
 
 // Update KPI cards
