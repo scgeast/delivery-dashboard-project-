@@ -143,3 +143,71 @@ document.addEventListener('DOMContentLoaded', function() {
     addDataGeneratorToUI();
     addSampleDataButton();
 });
+// Fungsi untuk menangani penggunaan sample data
+function useSampleData() {
+    try {
+        const generator = new DataGenerator();
+        const sampleData = generator.generateForUI(300);
+        
+        // Simpan data mentah
+        window.rawData = sampleData;
+        window.filteredData = [...window.rawData];
+        
+        // Update filter options
+        if (typeof updateFilterOptions === 'function') {
+            updateFilterOptions();
+        }
+        
+        // Proses data dan update dashboard
+        if (typeof processData === 'function') {
+            processData();
+        }
+        
+        showSuccess('Sample data loaded successfully! Use filters to explore the data.');
+    } catch (error) {
+        console.error('Error loading sample data:', error);
+        showError('Error loading sample data. Please check console for details.');
+    }
+}
+
+// Fungsi untuk menampilkan pesan sukses
+function showSuccess(message) {
+    // Hapus pesan sebelumnya jika ada
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Buat element untuk menampilkan pesan sukses
+    const successDiv = document.createElement('div');
+    successDiv.className = 'alert alert-success alert-dismissible fade show';
+    successDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Sisipkan pesan sukses setelah header
+    const header = document.querySelector('.header');
+    if (header) {
+        header.parentNode.insertBefore(successDiv, header.nextSibling);
+    }
+}
+
+// Fungsi untuk menampilkan pesan error
+function showError(message) {
+    // Hapus pesan sebelumnya jika ada
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Buat element untuk menampilkan error
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+    errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-circle me-2"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Sisipkan error message setelah header
+    const header = document.querySelector('.header');
+    if (header) {
+        header.parentNode.insertBefore(errorDiv, header.nextSibling);
+    }
+}
