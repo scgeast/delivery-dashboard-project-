@@ -1,1 +1,180 @@
+/* Variabel CSS untuk konsistensi tema */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #34495e;
+    --success-color: #2ecc71;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --text-color: #333;
+    --text-light: #7f8c8d;
+    --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --border-radius: 5px;
+}
 
+/* Style untuk card KPI */
+.kpi-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 15px;
+    box-shadow: var(--shadow);
+    margin-bottom: 15px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+}
+
+.kpi-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.kpi-label {
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+/* Style untuk chart container */
+.chart-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chart-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 8px;
+}
+
+/* Style untuk upload area */
+.upload-area {
+    border: 2px dashed var(--secondary-color);
+    padding: 30px;
+    text-align: center;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    background-color: #eaf2f8;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: var(--accent-color);
+    background-color: #dfeaf3;
+}
+
+.upload-area h4 {
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+}
+
+/* Style untuk filter section */
+.filter-section {
+    background-color: var(--light-color);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+.filter-toggle {
+    cursor: pointer;
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    display: inline-block;
+    font-weight: 600;
+}
+
+.filter-toggle:hover {
+    color: var(--accent-color);
+}
+
+/* Style untuk tab navigation */
+.nav-tabs .nav-link {
+    color: var(--primary-color);
+    font-weight: 500;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 20px;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--accent-color);
+    font-weight: 600;
+    background-color: transparent;
+    border-bottom: 3px solid var(--accent-color);
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: var(--secondary-color);
+}
+
+/* Icon box style */
+.icon-box {
+    display: inline-block;
+    width: 35px;
+    height: 35px;
+    background-color: var(--secondary-color);
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 35px;
+    margin-right: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .kpi-value {
+        font-size: 20px;
+    }
+    
+    .chart-container {
+        padding: 15px;
+    }
+    
+    .upload-area {
+        padding: 20px;
+    }
+}
+
+/* Loading spinner */
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.spinner-border {
+    color: var(--secondary-color);
+}
+
+/* Custom button styles */
+.btn-primary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.btn-secondary {
+    background-color: var(--text-light);
+    border-color: var(--text-light);
+}
