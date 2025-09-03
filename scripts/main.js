@@ -97,3 +97,49 @@ function validateData(data) {
     
     return true;
 }
+// Di main.js, tambahkan opsi untuk menggunakan data contoh
+function useSampleData() {
+    const generator = new DataGenerator();
+    const sampleData = generator.generateForUI(300);
+    
+    // Validasi data
+    try {
+        validateData(sampleData);
+        
+        // Simpan data mentah
+        rawData = sampleData;
+        filteredData = [...rawData];
+        
+        // Update filter options
+        updateFilterOptions();
+        
+        // Proses data dan update dashboard
+        processData();
+        
+        // Tampilkan pesan sukses
+        showSuccess('Sample data loaded successfully!');
+    } catch (error) {
+        showError(`Error loading sample data: ${error.message}`);
+    }
+}
+
+// Tambahkan button untuk menggunakan sample data di UI
+function addSampleDataButton() {
+    const sampleDataBtn = document.createElement('button');
+    sampleDataBtn.id = 'sample-data-btn';
+    sampleDataBtn.className = 'btn btn-outline-primary me-2';
+    sampleDataBtn.innerHTML = '<i class="fas fa-vial me-2"></i>Use Sample Data';
+    sampleDataBtn.onclick = useSampleData;
+    
+    // Tambahkan button di sebelah generator button
+    const generatorBtn = document.getElementById('data-generator-btn');
+    if (generatorBtn) {
+        generatorBtn.parentNode.insertBefore(sampleDataBtn, generatorBtn);
+    }
+}
+
+// Panggil fungsi inisialisasi
+document.addEventListener('DOMContentLoaded', function() {
+    addDataGeneratorToUI();
+    addSampleDataButton();
+});
