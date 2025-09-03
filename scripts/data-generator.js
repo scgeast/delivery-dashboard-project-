@@ -21,7 +21,7 @@ class DataGenerator {
     generateSampleData(rows = 500) {
         const data = [];
         const startDate = new Date();
-        startDate.setMonth(startDate.getMonth() - 3); // Data dari 3 bulan lalu hingga sekarang
+        startDate.setMonth(startDate.getMonth() - 3);
 
         for (let i = 0; i < rows; i++) {
             const area = this.getRandomItem(this.areas);
@@ -62,7 +62,9 @@ class DataGenerator {
     generateAndDownload() {
         const sampleData = this.generateSampleData(1000);
         this.generateExcelFile(sampleData, 'delivery-sample-data.xlsx');
-        showSuccess('Sample data generated and downloaded successfully!');
+        if (typeof showSuccess === 'function') {
+            showSuccess('Sample data generated and downloaded successfully!');
+        }
     }
 
     // Generate data untuk UI tanpa download
@@ -83,49 +85,17 @@ class DataGenerator {
     // Helper function untuk mendapatkan tanggal acak
     getRandomDate(start, end) {
         const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-        return date.toISOString().split('T')[0]; // Format YYYY-MM-DD
-    }
-}
-
-// Fungsi untuk menggunakan sample data di UI
-function useSampleData() {
-    try {
-        const generator = new DataGenerator();
-        const sampleData = generator.generateForUI(300);
-        
-        // Simpan data mentah
-        window.rawData = sampleData;
-        window.filteredData = [...window.rawData];
-        
-        // Update filter options
-        if (typeof updateFilterOptions === 'function') {
-            updateFilterOptions();
-        }
-        
-        // Proses data dan update dashboard
-        if (typeof processData === 'function') {
-            processData();
-        }
-        
-        showSuccess('Sample data loaded successfully! Use filters to explore the data.');
-    } catch (error) {
-        console.error('Error loading sample data:', error);
-        showError('Error loading sample data. Please check console for details.');
+        return date.toISOString().split('T')[0];
     }
 }
 
 // Fungsi untuk menambahkan button generator ke UI
 function addDataGeneratorToUI() {
-    // Cek jika sudah ada button generator
-    if (document.getElementById('data-generator-btn')) {
-        return;
-    }
+    if (document.getElementById('data-generator-btn')) return;
 
-    // Buat container untuk button
     const generatorContainer = document.createElement('div');
     generatorContainer.className = 'generator-container text-center mt-3';
     
-    // Buat button untuk generate dan download
     const generatorBtn = document.createElement('button');
     generatorBtn.id = 'data-generator-btn';
     generatorBtn.className = 'btn btn-info mb-2 me-2';
@@ -135,92 +105,53 @@ function addDataGeneratorToUI() {
         generator.generateAndDownload();
     };
 
-    // Buat button untuk menggunakan sample data di UI
     const sampleDataBtn = document.createElement('button');
     sampleDataBtn.id = 'sample-data-btn';
     sampleDataBtn.className = 'btn btn-outline-primary mb-2';
     sampleDataBtn.innerHTML = '<i class="fas fa-vial me-2"></i>Use Sample Data';
     sampleDataBtn.onclick = useSampleData;
 
-    // Buat info text
     const infoText = document.createElement('p');
     infoText.className = 'text-muted small';
     infoText.innerHTML = 'Generate sample Excel data for testing or use sample data directly in the dashboard.';
 
-    // Tambahkan ke container
     generatorContainer.appendChild(generatorBtn);
     generatorContainer.appendChild(sampleDataBtn);
     generatorContainer.appendChild(infoText);
 
-    // Tambahkan ke DOM setelah upload area
     const uploadArea = document.querySelector('.upload-area');
     if (uploadArea) {
         uploadArea.parentNode.insertBefore(generatorContainer, uploadArea.nextSibling);
     }
 }
 
-// Fungsi untuk menampilkan pesan sukses
-function showSuccess(message) {
-    // Hapus pesan error sebelumnya jika ada
-    const existingAlerts = document.querySelectorAll('.alert');
-    existingAlerts.forEach(alert => alert.remove());
-    
-    // Buat element untuk menampilkan pesan sukses
-    const successDiv = document.createElement('div');
-    successDiv.className = 'alert alert-success alert-dismissible fade show';
-    successDiv.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    
-    // Sisipkan pesan sukses setelah header
-    const header = document.querySelector('.header');
-    if (header) {
-        header.parentNode.insertBefore(successDiv, header.nextSibling);
-    }
-    
-    // Hapus otomatis setelah 5 detik
-    setTimeout(() => {
-        if (successDiv.parentNode) {
-            const bsAlert = new bootstrap.Alert(successDiv);
-            bsAlert.close();
+// Fungsi untuk menggunakan sample data
+function useSampleData() {
+    try {
+        const generator = new DataGenerator();
+        const sampleData = generator.generateForUI(300);
+        
+        window.rawData = sampleData;
+        window.filteredData = [...window.rawData];
+        
+        if (typeof updateFilterOptions === 'function') {
+            updateFilterOptions();
         }
-    }, 5000);
-}
-
-// Fungsi untuk menampilkan pesan error
-function showError(message) {
-    // Hapus pesan sebelumnya jika ada
-    const existingAlerts = document.querySelectorAll('.alert');
-    existingAlerts.forEach(alert => alert.remove());
-    
-    // Buat element untuk menampilkan error
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-    errorDiv.innerHTML = `
-        <i class="fas fa-exclamation-circle me-2"></i> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    
-    // Sisipkan error message setelah header
-    const header = document.querySelector('.header');
-    if (header) {
-        header.parentNode.insertBefore(errorDiv, header.nextSibling);
-    }
-    
-    // Hapus otomatis setelah 5 detik
-    setTimeout(() => {
-        if (errorDiv.parentNode) {
-            const bsAlert = new bootstrap.Alert(errorDiv);
-            bsAlert.close();
+        
+        if (typeof processData === 'function') {
+            processData();
         }
-    }, 5000);
+        
+        if (typeof showSuccess === 'function') {
+            showSuccess('Sample data loaded successfully! Use filters to explore the data.');
+        }
+    } catch (error) {
+        console.error('Error loading sample data:', error);
+        if (typeof showError === 'function') {
+            showError('Error loading sample data. Please check console for details.');
+        }
+    }
 }
-
-// Inisialisasi generator ketika dokumen sudah load
-document.addEventListener('DOMContentLoaded', function() {
-    addDataGeneratorToUI();
-});
 
 // Style CSS untuk generator button
 const generatorStyles = `
@@ -257,31 +188,3 @@ const generatorStyles = `
 const styleSheet = document.createElement('style');
 styleSheet.textContent = generatorStyles;
 document.head.appendChild(styleSheet);
-
-// Fungsi untuk menggunakan sample data
-function useSampleData() {
-    try {
-        const generator = new DataGenerator();
-        const sampleData = generator.generateForUI(300);
-        
-        // Simpan data mentah
-        window.rawData = sampleData;
-        window.filteredData = [...window.rawData];
-        
-        // Update filter options
-        if (typeof updateFilterOptions === 'function') {
-            updateFilterOptions();
-        }
-        
-        // Proses data dan update dashboard
-        if (typeof processData === 'function') {
-            processData();
-        }
-        
-        showSuccess('Sample data loaded successfully!');
-        
-    } catch (error) {
-        console.error('Error loading sample data:', error);
-        showError('Error: ' + error.message);
-    }
-}
