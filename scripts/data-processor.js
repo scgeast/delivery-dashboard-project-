@@ -1,250 +1,205 @@
-// Handle file upload
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+// data-processor.js - Versi diperbaiki
+
+function processData() {
+    console.log("Processing data for dashboard update");
     
-    // Validasi ukuran file
-    const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB < 2 || fileSizeMB > 30) {
-        showError('Ukuran file harus antara 2MB dan 30MB');
-        return;
-    }
-    
-    showLoading();
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            
-            // Ambil data dari sheet pertama
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
-            
-            // Validasi data
-            validateData(jsonData);
-            
-            // Simpan data mentah
-            rawData = jsonData;
-            filteredData = [...rawData];
-            
-            // Update filter options
-            updateFilterOptions();
-            
-            // Proses data dan update dashboard
-            processData();
-            
-        } catch (error) {
-            hideLoading();
-            showError('Error membaca file: ' + error.message);
-            console.error('Error processing file:', error);
+    try {
+        // Validasi data
+        if (!filteredData || !Array.isArray(filteredData) || filteredData.length === 0) {
+            console.warn("No filtered data available for processing");
+            return null;
         }
+        
+        // 1. Update KPI cards
+        updateKPIs();
+        
+        // 2. Process data untuk charts
+        const processedData = {
+            // Data untuk volume per area
+            volumePerArea: processVolumePerArea(),
+            
+            // Data untuk volume per plant
+            volumePerPlant: processVolumePerPlant(),
+            
+            // Data untuk average volume per area
+            avgVolumePerArea: processAvgVolumePerArea(),
+            
+            // Data untuk volume per salesman
+            volumePerSalesman: processVolumePerSalesman(),
+            
+            // Data untuk volume per customer
+            volumePerCustomer: processVolumePerCustomer(),
+            
+            // Data untuk volume per truck
+            volumePerTruck: processVolumePerTruck(),
+            
+            // Data untuk trip per truck
+            tripPerTruck: processTripPerTruck(),
+            
+            // Data untuk average load per truck
+            avgLoadPerTruck: processAvgLoadPerTruck(),
+            
+            // Data untuk average distance per area
+            avgDistancePerArea: processAvgDistancePerArea(),
+            
+            // Data untuk average distance per plant
+            avgDistancePerPlant: processAvgDistancePerPlant(),
+            
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log("Data processed successfully:", processedData);
+        
+        // 3. Update charts dengan data yang sudah diproses
+        if (typeof updateCharts === 'function') {
+            updateCharts(processedData);
+        } else {
+            console.warn("updateCharts function not available");
+        }
+        
+        return processedData;
+        
+    } catch (error) {
+        console.error("Error processing data:", error);
+        showError('Error processing data: ' + error.message);
+        throw error;
+    }
+}
+
+// Helper functions untuk memproses berbagai jenis data
+function processVolumePerArea() {
+    const areaVolume = {};
+    filteredData.forEach(item => {
+        const area = item.Area || 'Unknown';
+        const volume = Number(item.QTY) || 0;
+        areaVolume[area] = (areaVolume[area] || 0) + volume;
+    });
+    
+    return {
+        labels: Object.keys(areaVolume),
+        values: Object.values(areaVolume)
     };
+}
+
+function processVolumePerPlant() {
+    const plantVolume = {};
+    filteredData.forEach(item => {
+        const plant = item['Plant Name'] || 'Unknown';
+        const volume = Number(item.QTY) || 0;
+        plantVolume[plant] = (plantVolume[plant] || 0) + volume;
+    });
     
-    reader.onerror = function() {
-        hideLoading();
-        showError('Error membaca file. Pastikan file tidak corrupt dan formatnya benar.');
+    // Ambil hanya 10 plant dengan volume tertinggi
+    const sortedPlants = Object.entries(plantVolume)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+    
+    return {
+        labels: sortedPlants.map(item => item[0]),
+        values: sortedPlants.map(item => item[1])
     };
-    
-    reader.readAsArrayBuffer(file);
 }
 
-// Validasi data yang dibaca dari Excel
-function validateData(data) {
-    if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('Data tidak valid atau kosong');
-    }
+function processAvgVolumePerArea() {
+    const areaData = {};
     
-    // Cek kolom yang diperlukan
-    const requiredColumns = ['Area', 'DP Date', 'DP No', 'Plant Name', 'QTY', 'Truck No', 'Sales Man', 'Distance', 'End Customer Name'];
-    const firstRow = data[0];
-    
-    const missingColumns = requiredColumns.filter(col => !firstRow.hasOwnProperty(col));
-    if (missingColumns.length > 0) {
-        throw new Error(`Kolom yang diperlukan tidak ditemukan: ${missingColumns.join(', ')}`);
-    }
-    
-    return true;
-}
-
-// Update opsi filter
-function updateFilterOptions() {
-    // Area filter
-    const areas = [...new Set(rawData.map(item => item.Area))].filter(Boolean);
-    const areaFilter = document.getElementById('area-filter');
-    areaFilter.innerHTML = '';
-    areas.forEach(area => {
-        const option = document.createElement('option');
-        option.value = area;
-        option.textContent = area;
-        areaFilter.appendChild(option);
-    });
-    
-    // Plant filter
-    updatePlantFilterOptions();
-    
-    // Salesman filter
-    const salesmen = [...new Set(rawData.map(item => item['Sales Man']))].filter(Boolean);
-    const salesmanFilter = document.getElementById('salesman-filter');
-    salesmanFilter.innerHTML = '';
-    salesmen.forEach(salesman => {
-        const option = document.createElement('option');
-        option.value = salesman;
-        option.textContent = salesman;
-        salesmanFilter.appendChild(option);
-    });
-    
-    // Customer filter
-    const customers = [...new Set(rawData.map(item => item['End Customer Name']))].filter(Boolean);
-    const customerFilter = document.getElementById('customer-filter');
-    customerFilter.innerHTML = '';
-    customers.forEach(customer => {
-        const option = document.createElement('option');
-        option.value = customer;
-        option.textContent = customer;
-        customerFilter.appendChild(option);
-    });
-    
-    // Set date range
-    const dates = rawData.map(item => {
-        const date = new Date(item['DP Date']);
-        return isNaN(date) ? null : date;
-    }).filter(d => d !== null);
-    
-    if (dates.length > 0) {
-        const minDate = new Date(Math.min.apply(null, dates));
-        const maxDate = new Date(Math.max.apply(null, dates));
+    filteredData.forEach(item => {
+        const area = item.Area || 'Unknown';
+        const volume = Number(item.QTY) || 0;
         
-        document.getElementById('start-date').valueAsDate = minDate;
-        document.getElementById('end-date').valueAsDate = maxDate;
-    }
-}
-
-// Update plant filter berdasarkan area yang dipilih
-function updatePlantFilterOptions() {
-    const selectedAreas = Array.from(document.getElementById('area-filter').selectedOptions)
-        .map(option => option.value);
-    
-    let plants;
-    if (selectedAreas.length > 0) {
-        plants = [...new Set(rawData
-            .filter(item => selectedAreas.includes(item.Area))
-            .map(item => item['Plant Name'])
-        )].filter(Boolean);
-    } else {
-        plants = [...new Set(rawData.map(item => item['Plant Name']))].filter(Boolean);
-    }
-    
-    const plantFilter = document.getElementById('plant-filter');
-    plantFilter.innerHTML = '';
-    plants.forEach(plant => {
-        const option = document.createElement('option');
-        option.value = plant;
-        option.textContent = plant;
-        plantFilter.appendChild(option);
-    });
-}
-
-// Terapkan filter
-function applyFilters() {
-    const selectedAreas = Array.from(document.getElementById('area-filter').selectedOptions)
-        .map(option => option.value);
-    const selectedPlants = Array.from(document.getElementById('plant-filter').selectedOptions)
-        .map(option => option.value);
-    const selectedSalesmen = Array.from(document.getElementById('salesman-filter').selectedOptions)
-        .map(option => option.value);
-    const selectedCustomers = Array.from(document.getElementById('customer-filter').selectedOptions)
-        .map(option => option.value);
-    
-    const startDate = new Date(document.getElementById('start-date').value);
-    const endDate = new Date(document.getElementById('end-date').value);
-    endDate.setHours(23, 59, 59, 999); // Sampai akhir hari
-    
-    filteredData = rawData.filter(item => {
-        // Filter area
-        if (selectedAreas.length > 0 && !selectedAreas.includes(item.Area)) {
-            return false;
+        if (!areaData[area]) {
+            areaData[area] = { totalVolume: 0, count: 0 };
         }
         
-        // Filter plant
-        if (selectedPlants.length > 0 && !selectedPlants.includes(item['Plant Name'])) {
-            return false;
-        }
-        
-        // Filter salesman
-        if (selectedSalesmen.length > 0 && !selectedSalesmen.includes(item['Sales Man'])) {
-            return false;
-        }
-        
-        // Filter customer
-        if (selectedCustomers.length > 0 && !selectedCustomers.includes(item['End Customer Name'])) {
-            return false;
-        }
-        
-        // Filter tanggal
-        const itemDate = new Date(item['DP Date']);
-        if (isNaN(itemDate) || itemDate < startDate || itemDate > endDate) {
-            return false;
-        }
-        
-        return true;
+        areaData[area].totalVolume += volume;
+        areaData[area].count += 1;
     });
     
-    // Update dashboard dengan data yang sudah difilter
-    processData();
-}
-
-// Reset filter
-function resetFilters() {
-    document.getElementById('area-filter').selectedIndex = -1;
-    document.getElementById('plant-filter').selectedIndex = -1;
-    document.getElementById('salesman-filter').selectedIndex = -1;
-    document.getElementById('customer-filter').selectedIndex = -1;
-    
-    const dates = rawData.map(item => {
-        const date = new Date(item['DP Date']);
-        return isNaN(date) ? null : date;
-    }).filter(d => d !== null);
-    
-    if (dates.length > 0) {
-        const minDate = new Date(Math.min.apply(null, dates));
-        const maxDate = new Date(Math.max.apply(null, dates));
-        
-        document.getElementById('start-date').valueAsDate = minDate;
-        document.getElementById('end-date').valueAsDate = maxDate;
+    // Hitung rata-rata
+    const result = {};
+    for (const area in areaData) {
+        result[area] = areaData[area].totalVolume / areaData[area].count;
     }
     
-    filteredData = [...rawData];
-    processData();
+    return {
+        labels: Object.keys(result),
+        values: Object.values(result)
+    };
 }
 
-// Update KPI cards
-function updateKPIs() {
-    // Total Area
-    const totalArea = new Set(filteredData.map(item => item.Area)).size;
-    document.getElementById('total-area').textContent = totalArea;
+function processVolumePerSalesman() {
+    const salesmanVolume = {};
+    filteredData.forEach(item => {
+        const salesman = item['Sales Man'] || 'Unknown';
+        const volume = Number(item.QTY) || 0;
+        salesmanVolume[salesman] = (salesmanVolume[salesman] || 0) + volume;
+    });
     
-    // Total Plant
-    const totalPlant = new Set(filteredData.map(item => item['Plant Name'])).size;
-    document.getElementById('total-plant').textContent = totalPlant;
+    // Ambil hanya 10 salesman dengan volume tertinggi
+    const sortedSalesmen = Object.entries(salesmanVolume)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
     
-    // Total Volume
-    const totalVolume = filteredData.reduce((sum, item) => sum + (Number(item.QTY) || 0), 0);
-    document.getElementById('total-volume').textContent = totalVolume.toLocaleString();
-    
-    // Avg Volume
-    const avgVolume = filteredData.length > 0 ? totalVolume / filteredData.length : 0;
-    document.getElementById('avg-volume').textContent = avgVolume.toFixed(2);
-    
-    // Total TM (Truck No)
-    const totalTM = new Set(filteredData.map(item => item['Truck No'])).size;
-    document.getElementById('total-tm').textContent = totalTM;
-    
-    // Total Trip (DP No)
-    const totalTrip = new Set(filteredData.map(item => item['DP No'])).size;
-    
-    // Avg Load/Trip
-    const avgLoadTrip = totalTrip > 0 ? totalVolume / totalTrip : 0;
-    document.getElementById('avg-load-trip').textContent = avgLoadTrip.toFixed(2);
+    return {
+        labels: sortedSalesmen.map(item => item[0]),
+        values: sortedSalesmen.map(item => item[1])
+    };
 }
+
+function processVolumePerCustomer() {
+    const customerVolume = {};
+    filteredData.forEach(item => {
+        const customer = item['End Customer Name'] || 'Unknown';
+        const volume = Number(item.QTY) || 0;
+        customerVolume[customer] = (customerVolume[customer] || 0) + volume;
+    });
+    
+    // Ambil hanya 10 customer dengan volume tertinggi
+    const sortedCustomers = Object.entries(customerVolume)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+    
+    return {
+        labels: sortedCustomers.map(item => item[0]),
+        values: sortedCustomers.map(item => item[1])
+    };
+}
+
+// Stub functions untuk data yang belum diimplementasi
+function processVolumePerTruck() {
+    console.log("processVolumePerTruck called - needs implementation");
+    return { labels: [], values: [] };
+}
+
+function processTripPerTruck() {
+    console.log("processTripPerTruck called - needs implementation");
+    return { labels: [], values: [] };
+}
+
+function processAvgLoadPerTruck() {
+    console.log("processAvgLoadPerTruck called - needs implementation");
+    return { labels: [], values: [] };
+}
+
+function processAvgDistancePerArea() {
+    console.log("processAvgDistancePerArea called - needs implementation");
+    return { labels: [], values: [] };
+}
+
+function processAvgDistancePerPlant() {
+    console.log("processAvgDistancePerPlant called - needs implementation");
+    return { labels: [], values: [] };
+}
+
+// Pastikan fungsi tersedia secara global
+window.processData = processData;
+window.dataProcessor = {
+    processData,
+    processVolumePerArea,
+    processVolumePerPlant,
+    processAvgVolumePerArea,
+    processVolumePerSalesman,
+    processVolumePerCustomer
+};
+
+console.log("Data processor loaded successfully");
