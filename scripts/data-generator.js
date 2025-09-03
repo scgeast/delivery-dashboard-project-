@@ -257,3 +257,31 @@ const generatorStyles = `
 const styleSheet = document.createElement('style');
 styleSheet.textContent = generatorStyles;
 document.head.appendChild(styleSheet);
+
+// Fungsi untuk menggunakan sample data
+function useSampleData() {
+    try {
+        const generator = new DataGenerator();
+        const sampleData = generator.generateForUI(300);
+        
+        // Simpan data mentah
+        window.rawData = sampleData;
+        window.filteredData = [...window.rawData];
+        
+        // Update filter options
+        if (typeof updateFilterOptions === 'function') {
+            updateFilterOptions();
+        }
+        
+        // Proses data dan update dashboard
+        if (typeof processData === 'function') {
+            processData();
+        }
+        
+        showSuccess('Sample data loaded successfully!');
+        
+    } catch (error) {
+        console.error('Error loading sample data:', error);
+        showError('Error: ' + error.message);
+    }
+}
