@@ -1,52 +1,140 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Summary Daily Delivery Order</title>
+
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome untuk icon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js untuk visualisasi data -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <!-- Google Fonts Orbitron -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS untuk membaca file Excel -->
+    <!-- Chart.js Data Labels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <!-- SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Orbitron', monospace, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
             color: #333;
+            margin: 0;
+            padding: 0;
         }
-        .header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 0;
-            margin-bottom: 20px;
+        /* Sidebar */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 320px;
+            background-color: #fff;
+            border-right: 3px solid #3498db;
+            padding: 20px;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1050;
         }
-        .filter-section {
-            background-color: #ecf0f1;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        #sidebar.collapsed {
+            transform: translateX(-100%);
         }
-        .kpi-card {
-            background-color: white;
-            border-radius: 5px;
-            padding: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        #sidebar h4, #sidebar h5 {
+            color: #3498db;
+            font-weight: 700;
             margin-bottom: 15px;
-            text-align: center;
         }
-        .kpi-value {
-            font-size: 24px;
-            font-weight: bold;
+        #sidebar .form-label {
+            font-weight: 600;
             color: #2c3e50;
         }
-        .kpi-label {
-            font-size: 14px;
-            color: #7f8c8d;
+        #sidebar .form-select, #sidebar input[type="date"], #sidebar input[type="file"] {
+            font-family: 'Orbitron', monospace;
         }
+        #sidebar .btn {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+        }
+        /* Sidebar toggle button */
+        #sidebarToggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.7);
+            transition: background-color 0.3s ease;
+        }
+        #sidebarToggle:hover {
+            background-color: #2980b9;
+        }
+        /* Main content */
+        #mainContent {
+            margin-left: 340px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+        #mainContent.expanded {
+            margin-left: 20px;
+        }
+        /* Select All label */
+        .select-all-option {
+            font-weight: 700;
+            color: #e74c3c;
+            cursor: pointer;
+        }
+        /* KPI cards */
+        .kpi-card {
+            font-family: 'Orbitron', monospace;
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.15);
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2c3e50;
+        }
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: #3498db;
+        }
+        .kpi-label {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        /* Chart titles */
+        .chart-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        /* Tab nav */
+        .nav-tabs .nav-link {
+            color: #3498db;
+            font-weight: 600;
+            font-family: 'Orbitron', monospace;
+        }
+        .nav-tabs .nav-link.active {
+            color: #e74c3c;
+            font-weight: 700;
+            border-bottom: 3px solid #e74c3c;
+        }
+        /* Chart container */
         .chart-container {
             background-color: white;
             border-radius: 5px;
@@ -54,41 +142,7 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
-        .chart-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-        .nav-tabs .nav-link {
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        .nav-tabs .nav-link.active {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-        .footer {
-            background-color: #2c3e50;
-            color: white;
-            padding: 10px 0;
-            text-align: center;
-            margin-top: 30px;
-        }
-        .upload-area {
-            border: 2px dashed #3498db;
-            padding: 20px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            background-color: #eaf2f8;
-        }
-        .filter-toggle {
-            cursor: pointer;
-            color: #3498db;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
+        /* Icon box */
         .icon-box {
             display: inline-block;
             width: 30px;
@@ -100,86 +154,101 @@
             line-height: 30px;
             margin-right: 10px;
         }
+        /* Footer */
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            margin-top: 30px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="container">
-            <h1 class="text-center">Summary Daily Delivery Order</h1>
-            <p class="text-center" id="last-update">Last Update: -</p>
-        </div>
-    </div>
+    <!-- Sidebar Toggle Button -->
+    <button id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
 
-    <div class="container">
+    <!-- Sidebar -->
+    <aside id="sidebar" role="complementary" aria-label="Sidebar with Upload and Filters">
         <!-- Upload Section -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="upload-area">
-                    <h4>Upload File Excel</h4>
-                    <p>File harus berformat Excel (.xlsx) dengan ukuran 2MB - 30MB</p>
-                    <input type="file" id="file-upload" class="form-control" accept=".xlsx, .xls">
-                    <div class="mt-2">
-                        <small class="form-text text-muted">
-                            Pastikan file Excel memiliki kolom: Area, DP Date, DP No, Plant Name, QTY, Truck No, Sales Man, Distance, End Customer Name
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <section class="upload-area mb-4" aria-label="Upload Excel File Section">
+            <h4><i class="fas fa-file-upload"></i> Upload File Excel</h4>
+            <p>File harus berformat Excel (.xlsx) dengan ukuran 2MB - 30MB</p>
+            <input type="file" id="file-upload" class="form-control" accept=".xlsx, .xls" aria-describedby="uploadHelp" aria-label="Upload Excel file" />
+            <small id="uploadHelp" class="form-text text-muted">
+                Pastikan file Excel memiliki kolom: Area, DP Date, DP No, Plant Name, QTY, Truck No, Sales Man, Distance, End Customer Name
+            </small>
+        </section>
 
         <!-- Filter Section -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="filter-section">
-                    <h5 class="filter-toggle" data-bs-toggle="collapse" href="#filterCollapse">
-                        <i class="fas fa-filter"></i> Filter Data <i class="fas fa-chevron-down"></i>
-                    </h5>
-                    <div class="collapse show" id="filterCollapse">
-                        <div class="row">
-                            <div class="col-md-4 mb-2">
-                                <label for="area-filter" class="form-label">Area</label>
-                                <select class="form-select" id="area-filter" multiple>
-                                    <!-- Options akan diisi oleh JavaScript -->
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="start-date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start-date">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="end-date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end-date">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="plant-filter" class="form-label">Plant Name</label>
-                                <select class="form-select" id="plant-filter" multiple>
-                                    <!-- Options akan diisi oleh JavaScript -->
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="salesman-filter" class="form-label">Sales Man</label>
-                                <select class="form-select" id="salesman-filter" multiple>
-                                    <!-- Options akan diisi oleh JavaScript -->
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="customer-filter" class="form-label">End Customer Name</label>
-                                <select class="form-select" id="customer-filter" multiple>
-                                    <!-- Options akan diisi oleh JavaScript -->
-                                </select>
-                            </div>
-                            <div class="col-12 mt-2">
-                                <button class="btn btn-primary" id="apply-filters">Terapkan Filter</button>
-                                <button class="btn btn-secondary" id="reset-filters">Reset Filter</button>
-                            </div>
-                        </div>
+        <section class="filter-section" aria-label="Filter Data Section">
+            <h5><i class="fas fa-filter"></i> Filter Data</h5>
+            <form id="filterForm" aria-label="Filter delivery data">
+                <div class="mb-3">
+                    <label for="area-filter" class="form-label">Area</label>
+                    <select class="form-select" id="area-filter" multiple aria-multiselectable="true" aria-label="Filter by Area"></select>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" id="selectAllArea" aria-label="Select all Area" />
+                        <label class="form-check-label select-all-option" for="selectAllArea">Select All</label>
                     </div>
                 </div>
+                <div class="mb-3">
+                    <label for="start-date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start-date" aria-label="Start date filter" />
+                </div>
+                <div class="mb-3">
+                    <label for="end-date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end-date" aria-label="End date filter" />
+                </div>
+                <div class="mb-3">
+                    <label for="plant-filter" class="form-label">Plant Name</label>
+                    <select class="form-select" id="plant-filter" multiple aria-multiselectable="true" aria-label="Filter by Plant Name"></select>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" id="selectAllPlant" aria-label="Select all Plant Name" />
+                        <label class="form-check-label select-all-option" for="selectAllPlant">Select All</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="salesman-filter" class="form-label">Sales Man</label>
+                    <select class="form-select" id="salesman-filter" multiple aria-multiselectable="true" aria-label="Filter by Sales Man"></select>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" id="selectAllSalesman" aria-label="Select all Sales Man" />
+                        <label class="form-check-label select-all-option" for="selectAllSalesman">Select All</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="customer-filter" class="form-label">End Customer Name</label>
+                    <select class="form-select" id="customer-filter" multiple aria-multiselectable="true" aria-label="Filter by End Customer Name"></select>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" id="selectAllCustomer" aria-label="Select all End Customer Name" />
+                        <label class="form-check-label select-all-option" for="selectAllCustomer">Select All</label>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary flex-grow-1" id="apply-filters">Terapkan Filter</button>
+                    <button type="button" class="btn btn-secondary flex-grow-1" id="reset-filters">Reset Filter</button>
+                </div>
+            </form>
+        </section>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="mainContent" role="main" tabindex="-1">
+        <header class="header mb-4">
+            <div class="container-fluid px-0">
+                <h1 class="text-center" style="font-family: 'Orbitron', monospace; font-weight: 900; color: #3498db;">
+                    Summary Daily Delivery Order
+                </h1>
+                <p class="text-center" id="last-update" style="font-family: 'Orbitron', monospace; font-weight: 600; color: #7f8c8d;">
+                    Last Update: -
+                </p>
             </div>
-        </div>
+        </header>
 
         <!-- KPI Section -->
-        <div class="row mb-4">
+        <section class="row mb-4" aria-label="Key Performance Indicators">
             <div class="col-md-2 col-sm-6">
                 <div class="kpi-card">
                     <div class="kpi-value" id="total-area">0</div>
@@ -201,7 +270,7 @@
             <div class="col-md-2 col-sm-6">
                 <div class="kpi-card">
                     <div class="kpi-value" id="avg-volume">0</div>
-                    <div class="kpi-label">Avg Volume</div>
+                    <div class="kpi-label">Avg Volume Per Plant</div>
                 </div>
             </div>
             <div class="col-md-2 col-sm-6">
@@ -216,7 +285,7 @@
                     <div class="kpi-label">Avg Load/Trip</div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Tab Navigation -->
         <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
@@ -235,879 +304,81 @@
         <!-- Tab Content -->
         <div class="tab-content" id="dashboardTabContent">
             <!-- Logistic Tab -->
-            <div class="tab-pane fade show active" id="logistic" role="tabpanel" aria-labelledby="logistic-tab">
+            <section class="tab-pane fade show active" id="logistic" role="tabpanel" aria-labelledby="logistic-tab">
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h4><span class="icon-box"><i class="fas fa-chart-bar"></i></span> Delivery Performance</h4>
+                        <h4><span class="icon-box"><i class="fas fa-chart-pie"></i></span> Delivery Performance</h4>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Total Volume Delivery Per Area</div>
-                            <canvas id="volume-per-area-chart"></canvas>
+                            <canvas id="volume-per-area-chart" aria-label="Pie chart of total volume delivery per area" role="img"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Total Volume Delivery Per Plant Name</div>
-                            <canvas id="volume-per-plant-chart"></canvas>
+                            <canvas id="volume-per-plant-chart" aria-label="Bar chart of total volume delivery per plant name" role="img"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Avg Volume Delivery Per Area</div>
-                            <canvas id="avg-volume-area-chart"></canvas>
+                            <canvas id="avg-volume-area-chart" aria-label="Bar chart of average volume delivery per area" role="img"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Avg Volume Delivery Per Plant Name</div>
-                            <canvas id="avg-volume-plant-chart"></canvas>
+                            <canvas id="avg-volume-plant-chart" aria-label="Bar chart of average volume delivery per plant name" role="img"></canvas>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row mb-4 mt-4">
                     <div class="col-12">
                         <h4><span class="icon-box"><i class="fas fa-truck-loading"></i></span> Truck Utilization</h4>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Total Volume Delivery Per Truck No</div>
-                            <canvas id="volume-per-truck-chart"></canvas>
+                            <canvas id="volume-per-truck-chart" aria-label="Bar chart of total volume delivery per truck number" role="img"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Total Trip per Truck No</div>
-                            <canvas id="trip-per-truck-chart"></canvas>
+                            <canvas id="trip-per-truck-chart" aria-label="Bar chart of total trips per truck number" role="img"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Avg Load per Trip per Truck No</div>
-                            <canvas id="avg-load-truck-chart"></canvas>
+                            <canvas id="avg-load-truck-chart" aria-label="Bar chart of average load per trip per truck number" role="img"></canvas>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row mb-4 mt-4">
                     <div class="col-12">
                         <h4><span class="icon-box"><i class="fas fa-route"></i></span> Distance</h4>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Avg Distance Per Area</div>
-                            <canvas id="avg-distance-area-chart"></canvas>
+                            <canvas id="avg-distance-area-chart" aria-label="Bar chart of average distance per area" role="img"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="chart-container">
                             <div class="chart-title">Avg Distance Per Plant Name</div>
-                            <canvas id="avg-distance-plant-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sales Tab -->
-            <div class="tab-pane fade" id="sales" role="tabpanel" aria-labelledby="sales-tab">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Total Volume Per Sales Man</div>
-                            <canvas id="volume-salesman-chart"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Total Volume Per End Customer Name</div>
-                            <canvas id="volume-customer-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="footer">
-        <div class="container">
-            <p>Summary Daily Delivery Order by L=23-51Xe</p>
-        </div>
-    </div>
-
-    <!-- Bootstrap & jQuery JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // Data global untuk menyimpan data Excel
-        let rawData = [];
-        let filteredData = [];
-        
-        // Chart objects
-        let charts = {};
-        
-        // Fungsi normalisasi string
-        function normalizeString(str) {
-            if (typeof str !== 'string') return '';
-            return str.toLowerCase().replace(/\s+/g, ' ').trim();
-        }
-        
-        // Fungsi untuk mendapatkan nilai unik dengan normalisasi
-        function getNormalizedUniqueValues(data, key) {
-            const normalizedMap = new Map();
-            
-            data.forEach(item => {
-                const value = item[key];
-                if (value !== undefined && value !== null && value !== '') {
-                    const normalized = normalizeString(value);
-                    if (!normalizedMap.has(normalized)) {
-                        normalizedMap.set(normalized, value);
-                    }
-                }
-            });
-            
-            return Array.from(normalizedMap.values());
-        }
-        
-        // Fungsi untuk membandingkan nilai dengan normalisasi
-        function compareNormalized(value1, value2) {
-            return normalizeString(value1) === normalizeString(value2);
-        }
-        
-        // Update last update time
-        function updateLastUpdateTime() {
-            const now = new Date();
-            const formattedDate = now.toLocaleString('id-ID', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            document.getElementById('last-update').textContent = `Last Update: ${formattedDate}`;
-        }
-        
-        // Inisialisasi
-        document.addEventListener('DOMContentLoaded', function() {
-            updateLastUpdateTime();
-            
-            // Event listener untuk upload file
-            document.getElementById('file-upload').addEventListener('change', handleFileUpload);
-            
-            // Event listener untuk filter
-            document.getElementById('apply-filters').addEventListener('click', applyFilters);
-            document.getElementById('reset-filters').addEventListener('click', resetFilters);
-            
-            // Event listener untuk area filter change (untuk update plant filter)
-            document.getElementById('area-filter').addEventListener('change', updatePlantFilterOptions);
-        });
-        
-        // Handle file upload
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            // Validasi ukuran file
-            const fileSizeMB = file.size / (1024 * 1024);
-            if (fileSizeMB < 2 || fileSizeMB > 30) {
-                alert('Ukuran file harus antara 2MB dan 30MB');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                
-                // Ambil data dari sheet pertama
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                
-                // Simpan data mentah
-                rawData = jsonData;
-                filteredData = [...rawData];
-                
-                // Update filter options
-                updateFilterOptions();
-                
-                // Proses data dan update dashboard
-                processData();
-            };
-            reader.readAsArrayBuffer(file);
-        }
-        
-        // Update opsi filter
-        function updateFilterOptions() {
-            // Area filter
-            const areas = getNormalizedUniqueValues(rawData, 'Area');
-            const areaFilter = document.getElementById('area-filter');
-            areaFilter.innerHTML = '';
-            areas.forEach(area => {
-                const option = document.createElement('option');
-                option.value = area;
-                option.textContent = area;
-                areaFilter.appendChild(option);
-            });
-            
-            // Plant filter
-            updatePlantFilterOptions();
-            
-            // Salesman filter
-            const salesmen = getNormalizedUniqueValues(rawData, 'Sales Man');
-            const salesmanFilter = document.getElementById('salesman-filter');
-            salesmanFilter.innerHTML = '';
-            salesmen.forEach(salesman => {
-                const option = document.createElement('option');
-                option.value = salesman;
-                option.textContent = salesman;
-                salesmanFilter.appendChild(option);
-            });
-            
-            // Customer filter
-            const customers = getNormalizedUniqueValues(rawData, 'End Customer Name');
-            const customerFilter = document.getElementById('customer-filter');
-            customerFilter.innerHTML = '';
-            customers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = customer;
-                option.textContent = customer;
-                customerFilter.appendChild(option);
-            });
-            
-            // Set date range
-            const dates = rawData.map(item => new Date(item['DP Date'])).filter(d => !isNaN(d));
-            const minDate = new Date(Math.min.apply(null, dates));
-            const maxDate = new Date(Math.max.apply(null, dates));
-            
-            document.getElementById('start-date').valueAsDate = minDate;
-            document.getElementById('end-date').valueAsDate = maxDate;
-        }
-        
-        // Update plant filter berdasarkan area yang dipilih
-        function updatePlantFilterOptions() {
-            const selectedAreas = Array.from(document.getElementById('area-filter').selectedOptions)
-                .map(option => option.value);
-            
-            let plants;
-            if (selectedAreas.length > 0) {
-                plants = getNormalizedUniqueValues(
-                    rawData.filter(item => 
-                        selectedAreas.some(area => compareNormalized(area, item.Area))
-                    ), 
-                    'Plant Name'
-                );
-            } else {
-                plants = getNormalizedUniqueValues(rawData, 'Plant Name');
-            }
-            
-            const plantFilter = document.getElementById('plant-filter');
-            plantFilter.innerHTML = '';
-            plants.forEach(plant => {
-                const option = document.createElement('option');
-                option.value = plant;
-                option.textContent = plant;
-                plantFilter.appendChild(option);
-            });
-        }
-        
-        // Terapkan filter
-        function applyFilters() {
-            const selectedAreas = Array.from(document.getElementById('area-filter').selectedOptions)
-                .map(option => option.value);
-            const selectedPlants = Array.from(document.getElementById('plant-filter').selectedOptions)
-                .map(option => option.value);
-            const selectedSalesmen = Array.from(document.getElementById('salesman-filter').selectedOptions)
-                .map(option => option.value);
-            const selectedCustomers = Array.from(document.getElementById('customer-filter').selectedOptions)
-                .map(option => option.value);
-            
-            const startDate = new Date(document.getElementById('start-date').value);
-            const endDate = new Date(document.getElementById('end-date').value);
-            endDate.setHours(23, 59, 59, 999); // Sampai akhir hari
-            
-            filteredData = rawData.filter(item => {
-                // Filter area
-                if (selectedAreas.length > 0 && !selectedAreas.some(area => compareNormalized(area, item.Area))) {
-                    return false;
-                }
-                
-                // Filter plant
-                if (selectedPlants.length > 0 && !selectedPlants.some(plant => compareNormalized(plant, item['Plant Name']))) {
-                    return false;
-                }
-                
-                // Filter salesman
-                if (selectedSalesmen.length > 0 && !selectedSalesmen.some(salesman => compareNormalized(salesman, item['Sales Man']))) {
-                    return false;
-                }
-                
-                // Filter customer
-                if (selectedCustomers.length > 0 && !selectedCustomers.some(customer => compareNormalized(customer, item['End Customer Name']))) {
-                    return false;
-                }
-                
-                // Filter tanggal
-                const itemDate = new Date(item['DP Date']);
-                if (itemDate < startDate || itemDate > endDate) {
-                    return false;
-                }
-                
-                return true;
-            });
-            
-            // Update dashboard dengan data yang sudah difilter
-            processData();
-        }
-        
-        // Reset filter
-        function resetFilters() {
-            document.getElementById('area-filter').selectedIndex = -1;
-            document.getElementById('plant-filter').selectedIndex = -1;
-            document.getElementById('salesman-filter').selectedIndex = -1;
-            document.getElementById('customer-filter').selectedIndex = -1;
-            
-            const dates = rawData.map(item => new Date(item['DP Date'])).filter(d => !isNaN(d));
-            const minDate = new Date(Math.min.apply(null, dates));
-            const maxDate = new Date(Math.max.apply(null, dates));
-            
-            document.getElementById('start-date').valueAsDate = minDate;
-            document.getElementById('end-date').valueAsDate = maxDate;
-            
-            filteredData = [...rawData];
-            processData();
-        }
-        
-        // Proses data dan update dashboard
-        function processData() {
-            updateLastUpdateTime();
-            updateKPIs();
-            updateCharts();
-        }
-        
-        // Update KPI cards
-        function updateKPIs() {
-            // Total Area
-            const totalArea = new Set(filteredData.map(item => normalizeString(item.Area))).size;
-            document.getElementById('total-area').textContent = totalArea;
-            
-            // Total Plant
-            const totalPlant = new Set(filteredData.map(item => normalizeString(item['Plant Name']))).size;
-            document.getElementById('total-plant').textContent = totalPlant;
-            
-            // Total Volume
-            const totalVolume = filteredData.reduce((sum, item) => sum + (Number(item.QTY) || 0), 0);
-            document.getElementById('total-volume').textContent = totalVolume.toLocaleString();
-            
-            // Avg Volume
-            const avgVolume = filteredData.length > 0 ? totalVolume / filteredData.length : 0;
-            document.getElementById('avg-volume').textContent = avgVolume.toFixed(2);
-            
-            // Total TM (Truck No)
-            const totalTM = new Set(filteredData.map(item => normalizeString(item['Truck No']))).size;
-            document.getElementById('total-tm').textContent = totalTM;
-            
-            // Total Trip (DP No)
-            const totalTrip = new Set(filteredData.map(item => item['DP No'])).size;
-            
-            // Avg Load/Trip
-            const avgLoadTrip = totalTrip > 0 ? totalVolume / totalTrip : 0;
-            document.getElementById('avg-load-trip').textContent = avgLoadTrip.toFixed(2);
-        }
-        
-        // Update semua charts
-        function updateCharts() {
-            updateVolumePerAreaChart();
-            updateVolumePerPlantChart();
-            updateAvgVolumeAreaChart();
-            updateAvgVolumePlantChart();
-            updateVolumePerTruckChart();
-            updateTripPerTruckChart();
-            updateAvgLoadTruckChart();
-            updateAvgDistanceAreaChart();
-            updateAvgDistancePlantChart();
-            updateVolumeSalesmanChart();
-            updateVolumeCustomerChart();
-        }
-        
-        // Fungsi untuk mengelompokkan data dengan normalisasi
-        function groupDataByNormalizedKey(data, key) {
-            const grouped = {};
-            
-            data.forEach(item => {
-                const value = item[key] || 'Unknown';
-                const normalizedKey = normalizeString(value);
-                
-                if (!grouped[normalizedKey]) {
-                    grouped[normalizedKey] = {
-                        originalKey: value,
-                        total: 0,
-                        count: 0,
-                        trips: new Set()
-                    };
-                }
-                
-                const volume = Number(item.QTY) || 0;
-                grouped[normalizedKey].total += volume;
-                grouped[normalizedKey].count += 1;
-                
-                // Untuk perhitungan trip (DP No)
-                if (item['DP No']) {
-                    grouped[normalizedKey].trips.add(item['DP No']);
-                }
-            });
-            
-            return grouped;
-        }
-        
-        // Chart: Total Volume Delivery Per Area
-        function updateVolumePerAreaChart() {
-            const areaData = groupDataByNormalizedKey(filteredData, 'Area');
-            
-            const ctx = document.getElementById('volume-per-area-chart').getContext('2d');
-            if (charts['volumePerArea']) {
-                charts['volumePerArea'].destroy();
-            }
-            
-            charts['volumePerArea'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.values(areaData).map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Total Volume',
-                        data: Object.values(areaData).map(item => item.total),
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Total Volume Delivery Per Plant Name
-        function updateVolumePerPlantChart() {
-            const plantData = groupDataByNormalizedKey(filteredData, 'Plant Name');
-            
-            // Ambil hanya 10 plant dengan volume tertinggi untuk kejelasan visual
-            const sortedPlants = Object.values(plantData)
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 10);
-            
-            const ctx = document.getElementById('volume-per-plant-chart').getContext('2d');
-            if (charts['volumePerPlant']) {
-                charts['volumePerPlant'].destroy();
-            }
-            
-            charts['volumePerPlant'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedPlants.map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Total Volume',
-                        data: sortedPlants.map(item => item.total),
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Avg Volume Delivery Per Area
-        function updateAvgVolumeAreaChart() {
-            const areaData = groupDataByNormalizedKey(filteredData, 'Area');
-            
-            const areaAvg = {};
-            Object.keys(areaData).forEach(key => {
-                areaAvg[key] = areaData[key].total / areaData[key].count;
-            });
-            
-            const ctx = document.getElementById('avg-volume-area-chart').getContext('2d');
-            if (charts['avgVolumeArea']) {
-                charts['avgVolumeArea'].destroy();
-            }
-            
-            charts['avgVolumeArea'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.values(areaData).map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Average Volume',
-                        data: Object.values(areaData).map(item => item.total / item.count),
-                        backgroundColor: 'rgba(255, 159, 64, 0.7)',
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Avg Volume Delivery Per Plant Name
-        function updateAvgVolumePlantChart() {
-            const plantData = groupDataByNormalizedKey(filteredData, 'Plant Name');
-            
-            // Ambil hanya 10 plant dengan volume tertinggi untuk kejelasan visual
-            const sortedPlants = Object.values(plantData)
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 10);
-            
-            const ctx = document.getElementById('avg-volume-plant-chart').getContext('2d');
-            if (charts['avgVolumePlant']) {
-                charts['avgVolumePlant'].destroy();
-            }
-            
-            charts['avgVolumePlant'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedPlants.map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Average Volume',
-                        data: sortedPlants.map(item => item.total / item.count),
-                        backgroundColor: 'rgba(153, 102, 255, 0.7)',
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Total Volume Delivery Per Truck No
-        function updateVolumePerTruckChart() {
-            const truckData = groupDataByNormalizedKey(filteredData, 'Truck No');
-            
-            // Ambil hanya 10 truck dengan volume tertinggi untuk kejelasan visual
-            const sortedTrucks = Object.values(truckData)
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 10);
-            
-            const ctx = document.getElementById('volume-per-truck-chart').getContext('2d');
-            if (charts['volumePerTruck']) {
-                charts['volumePerTruck'].destroy();
-            }
-            
-            charts['volumePerTruck'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedTrucks.map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Total Volume',
-                        data: sortedTrucks.map(item => item.total),
-                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Total Trip per Truck No
-        function updateTripPerTruckChart() {
-            const truckData = groupDataByNormalizedKey(filteredData, 'Truck No');
-            
-            const truckTripCounts = {};
-            Object.keys(truckData).forEach(key => {
-                truckTripCounts[key] = truckData[key].trips.size;
-            });
-            
-            // Ambil hanya 10 truck dengan trip tertinggi untuk kejelasan visual
-            const sortedTrucks = Object.entries(truckTripCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10)
-                .map(([key, value]) => ({
-                    originalKey: truckData[key].originalKey,
-                    tripCount: value
-                }));
-            
-            const ctx = document.getElementById('trip-per-truck-chart').getContext('2d');
-            if (charts['tripPerTruck']) {
-                charts['tripPerTruck'].destroy();
-            }
-            
-            charts['tripPerTruck'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedTrucks.map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Total Trip',
-                        data: sortedTrucks.map(item => item.tripCount),
-                        backgroundColor: 'rgba(255, 205, 86, 0.7)',
-                        borderColor: 'rgba(255, 205, 86, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Avg Load per Trip per Truck No
-        function updateAvgLoadTruckChart() {
-            const truckData = groupDataByNormalizedKey(filteredData, 'Truck No');
-            
-            const truckAvgLoad = {};
-            Object.keys(truckData).forEach(key => {
-                const tripCount = truckData[key].trips.size;
-                truckAvgLoad[key] = tripCount > 0 ? truckData[key].total / tripCount : 0;
-            });
-            
-            // Ambil hanya 10 truck dengan avg load tertinggi untuk kejelasan visual
-            const sortedTrucks = Object.entries(truckAvgLoad)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10)
-                .map(([key, value]) => ({
-                    originalKey: truckData[key].originalKey,
-                    avgLoad: value
-                }));
-            
-            const ctx = document.getElementById('avg-load-truck-chart').getContext('2d');
-            if (charts['avgLoadTruck']) {
-                charts['avgLoadTruck'].destroy();
-            }
-            
-            charts['avgLoadTruck'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedTrucks.map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Avg Load per Trip',
-                        data: sortedTrucks.map(item => item.avgLoad),
-                        backgroundColor: 'rgba(201, 203, 207, 0.7)',
-                        borderColor: 'rgba(201, 203, 207, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Fungsi untuk mengelompokkan data dengan normalisasi dan menghitung jarak rata-rata
-        function groupDataWithDistance(data, key) {
-            const grouped = {};
-            
-            data.forEach(item => {
-                const value = item[key] || 'Unknown';
-                const normalizedKey = normalizeString(value);
-                
-                if (!grouped[normalizedKey]) {
-                    grouped[normalizedKey] = {
-                        originalKey: value,
-                        totalDistance: 0,
-                        count: 0
-                    };
-                }
-                
-                const distance = Number(item.Distance) || 0;
-                grouped[normalizedKey].totalDistance += distance;
-                grouped[normalizedKey].count += 1;
-            });
-            
-            return grouped;
-        }
-        
-        // Chart: Avg Distance Per Area
-        function updateAvgDistanceAreaChart() {
-            const areaData = groupDataWithDistance(filteredData, 'Area');
-            
-            const ctx = document.getElementById('avg-distance-area-chart').getContext('2d');
-            if (charts['avgDistanceArea']) {
-                charts['avgDistanceArea'].destroy();
-            }
-            
-            charts['avgDistanceArea'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.values(areaData).map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Average Distance',
-                        data: Object.values(areaData).map(item => item.totalDistance / item.count),
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Avg Distance Per Plant Name
-        function updateAvgDistancePlantChart() {
-            const plantData = groupDataWithDistance(filteredData, 'Plant Name');
-            
-            // Ambil hanya 10 plant dengan distance tertinggi untuk kejelasan visual
-            const sortedPlants = Object.values(plantData)
-                .sort((a, b) => (b.totalDistance / b.count) - (a.totalDistance / a.count))
-                .slice(0, 10);
-            
-            const ctx = document.getElementById('avg-distance-plant-chart').getContext('2d');
-            if (charts['avgDistancePlant']) {
-                charts['avgDistancePlant'].destroy();
-            }
-            
-            charts['avgDistancePlant'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedPlants.map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Average Distance',
-                        data: sortedPlants.map(item => item.totalDistance / item.count),
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Total Volume Per Sales Man
-        function updateVolumeSalesmanChart() {
-            const salesmanData = groupDataByNormalizedKey(filteredData, 'Sales Man');
-            
-            // Ambil hanya 10 salesman dengan volume tertinggi untuk kejelasan visual
-            const sortedSalesmen = Object.values(salesmanData)
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 10);
-            
-            const ctx = document.getElementById('volume-salesman-chart').getContext('2d');
-            if (charts['volumeSalesman']) {
-                charts['volumeSalesman'].destroy();
-            }
-            
-            charts['volumeSalesman'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedSalesmen.map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Total Volume',
-                        data: sortedSalesmen.map(item => item.total),
-                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Chart: Total Volume Per End Customer Name
-        function updateVolumeCustomerChart() {
-            const customerData = groupDataByNormalizedKey(filteredData, 'End Customer Name');
-            
-            // Ambil hanya 10 customer dengan volume tertinggi untuk kejelasan visual
-            const sortedCustomers = Object.values(customerData)
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 10);
-            
-            const ctx = document.getElementById('volume-customer-chart').getContext('2d');
-            if (charts['volumeCustomer']) {
-                charts['volumeCustomer'].destroy();
-            }
-            
-            charts['volumeCustomer'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedCustomers.map(item => item.originalKey),
-                    datasets: [{
-                        label: 'Total Volume',
-                        data: sortedCustomers.map(item => item.total),
-                        backgroundColor: 'rgba(153, 102, 255, 0.7)',
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+                            <canvas id="avg-distance-plant-chart" aria-label="Bar chart of average distance per plant
