@@ -416,38 +416,39 @@
                             </div>
                         </div>
                         
+                        <!-- Delivery Performance Charts - Vertikal Layout -->
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Total Volume Delivery Per Area</div>
                                     <canvas id="volume-per-area-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Volume Per Day/Area</div>
                                     <canvas id="volume-per-day-area-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Volume Per Day/Plant</div>
                                     <canvas id="volume-per-day-plant-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Total Volume Delivery Per Plant Name</div>
                                     <canvas id="volume-per-plant-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Avg Volume Delivery /Day per Area</div>
                                     <canvas id="avg-volume-day-area-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Avg Volume Delivery /Day Per Plant</div>
                                     <canvas id="avg-volume-day-plant-chart"></canvas>
@@ -461,20 +462,27 @@
                             </div>
                         </div>
                         
+                        <!-- Truck Utilization Charts - Vertikal Layout -->
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Total Volume Delivery Per Truck No</div>
                                     <canvas id="volume-per-truck-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Total Trip per Truck No</div>
                                     <canvas id="trip-per-truck-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
+                                <div class="chart-container">
+                                    <div class="chart-title">Avg Trip per Truck No</div>
+                                    <canvas id="avg-trip-truck-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Avg Load per Trip per Truck No</div>
                                     <canvas id="avg-load-truck-chart"></canvas>
@@ -488,14 +496,15 @@
                             </div>
                         </div>
                         
+                        <!-- Distance Charts - Vertikal Layout -->
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Avg Distance Per Area</div>
                                     <canvas id="avg-distance-area-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Avg Distance Per Plant Name</div>
                                     <canvas id="avg-distance-plant-chart"></canvas>
@@ -506,14 +515,15 @@
 
                     <!-- Sales Tab -->
                     <div class="tab-pane fade" id="sales" role="tabpanel" aria-labelledby="sales-tab">
+                        <!-- Sales Charts - Vertikal Layout -->
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Total Volume Per Sales Man</div>
                                     <canvas id="volume-salesman-chart"></canvas>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="chart-container">
                                     <div class="chart-title">Total Volume Per End Customer Name</div>
                                     <canvas id="volume-customer-chart"></canvas>
@@ -987,8 +997,13 @@
             // Total Trip (DP No)
             const totalTrip = new Set(filteredData.map(item => item['DP No'])).size;
             
-            // Avg Trip/TM
-            const avgTripTM = totalTM > 0 ? totalTrip / totalTM : 0;
+            // Hitung jumlah hari dalam filter
+            const uniqueDays = new Set(filteredData.map(item => {
+                return item['DP Date'] ? item['DP Date'] : '';
+            })).size;
+            
+            // Avg Trip/TM = (Total Trip : Total TM : Jumlah Hari Filter)
+            const avgTripTM = totalTM > 0 && uniqueDays > 0 ? (totalTrip / totalTM / uniqueDays) : 0;
             document.getElementById('avg-trip-tm').textContent = avgTripTM.toFixed(2);
             
             // Avg Load/Trip
@@ -1006,6 +1021,7 @@
             updateAvgVolumeDayPlantChart();
             updateVolumePerTruckChart();
             updateTripPerTruckChart();
+            updateAvgTripTruckChart(); // Chart baru: Avg Trip per Truck No
             updateAvgLoadTruckChart();
             updateAvgDistanceAreaChart();
             updateAvgDistancePlantChart();
@@ -1565,6 +1581,86 @@
                     scales: {
                         y: {
                             beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                color: '#2c3e50'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                color: '#2c3e50',
+                                maxRotation: 90,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#2c3e50'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Chart: Avg Trip per Truck No (Baru)
+        function updateAvgTripTruckChart() {
+            const truckData = groupDataByNormalizedKey(filteredData, 'Truck No');
+            
+            // Hitung jumlah hari unik dalam data yang difilter
+            const uniqueDays = new Set(filteredData.map(item => {
+                return item['DP Date'] ? item['DP Date'] : '';
+            })).size;
+            
+            const truckAvgTrip = {};
+            Object.keys(truckData).forEach(key => {
+                const tripCount = truckData[key].trips.size;
+                truckAvgTrip[key] = uniqueDays > 0 ? tripCount / uniqueDays : 0;
+            });
+            
+            // Ambil semua truck untuk ditampilkan
+            const allTrucks = Object.entries(truckAvgTrip)
+                .sort((a, b) => b[1] - a[1])
+                .map(([key, value]) => ({
+                    originalKey: truckData[key].originalKey,
+                    avgTrip: value
+                }));
+            
+            const ctx = document.getElementById('avg-trip-truck-chart').getContext('2d');
+            if (charts['avgTripTruck']) {
+                charts['avgTripTruck'].destroy();
+            }
+            
+            charts['avgTripTruck'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: allTrucks.map(item => item.originalKey),
+                    datasets: [{
+                        label: 'Avg Trip per Truck',
+                        data: allTrucks.map(item => item.avgTrip),
+                        backgroundColor: 'rgba(54, 162, 235, 0.9)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Trips per Day',
+                                color: '#2c3e50'
+                            },
                             grid: {
                                 color: 'rgba(0, 0, 0, 0.1)'
                             },
