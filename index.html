@@ -13,324 +13,447 @@
     <!-- SheetJS untuk membaca file Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --info-color: #7209b7;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             color: #333;
+            min-height: 100vh;
         }
         .header {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             padding: 15px 0;
             margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .filter-section {
-            background-color: #ecf0f1;
-            padding: 15px;
-            border-radius: 5px;
+        .sidebar {
+            background: linear-gradient(180deg, var(--accent-color) 0%, #4cc9f0 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            height: fit-content;
             margin-bottom: 20px;
         }
-        .kpi-card {
-            background-color: white;
-            border-radius: 5px;
-            padding: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .sidebar-title i {
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-content {
+            display: block;
+        }
+        .sidebar-content.collapsed {
+            display: none;
+        }
+        .filter-section {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f8ff 100%);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
             text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
         }
         .kpi-value {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
-            color: #2c3e50;
+            color: var(--primary-color);
+            margin-bottom: 5px;
         }
         .kpi-label {
             font-size: 14px;
-            color: #7f8c8d;
+            color: #6c757d;
+            font-weight: 500;
         }
         .chart-container {
-            background-color: white;
-            border-radius: 5px;
-            padding: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            transition: transform 0.3s ease;
+        }
+        .chart-container:hover {
+            transform: translateY(-3px);
         }
         .chart-title {
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             margin-bottom: 15px;
-            color: #2c3e50;
+            color: var(--secondary-color);
+            text-align: center;
         }
         .nav-tabs .nav-link {
-            color: #2c3e50;
+            color: var(--dark-color);
             font-weight: 500;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
         }
         .nav-tabs .nav-link.active {
-            color: #e74c3c;
+            color: var(--primary-color);
             font-weight: 600;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-bottom: 3px solid var(--primary-color);
         }
         .footer {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            padding: 10px 0;
+            padding: 15px 0;
             text-align: center;
             margin-top: 30px;
+            border-radius: 10px 10px 0 0;
         }
         .upload-area {
-            border: 2px dashed #3498db;
+            border: 2px dashed rgba(255, 255, 255, 0.7);
             padding: 20px;
             text-align: center;
-            border-radius: 5px;
+            border-radius: 8px;
             margin-bottom: 20px;
-            background-color: #eaf2f8;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
         }
-        .filter-toggle {
-            cursor: pointer;
-            color: #3498db;
-            margin-bottom: 10px;
-            display: inline-block;
+        .upload-area:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.9);
         }
         .icon-box {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            background-color: #3498db;
+            display: inline-flex;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
             color: white;
             border-radius: 50%;
             text-align: center;
-            line-height: 30px;
+            align-items: center;
+            justify-content: center;
             margin-right: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.3);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(108, 117, 125, 0.3);
+        }
+        .form-control, .form-select {
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+            border-color: var(--primary-color);
+        }
+        .select-all-btn {
+            margin-bottom: 8px;
+            font-size: 12px;
+            padding: 3px 8px;
+        }
+        .main-content {
+            padding-left: 10px;
+        }
+        @media (max-width: 992px) {
+            .main-content {
+                padding-left: 0;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="container">
-            <h1 class="text-center">Summary Daily Delivery Order</h1>
-            <p class="text-center" id="last-update">Last Update: -</p>
+            <h1 class="text-center"><i class="fas fa-chart-line me-2"></i>Summary Daily Delivery Order</h1>
+            <p class="text-center mb-0" id="last-update">Last Update: -</p>
         </div>
     </div>
 
     <div class="container">
-        <!-- Upload Section -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="upload-area">
-                    <h4>Upload File Excel</h4>
-                    <p>File harus berformat Excel (.xlsx) dengan ukuran 2MB - 30MB</p>
-                    <input type="file" id="file-upload" class="form-control" accept=".xlsx, .xls">
-                    <div class="mt-2">
-                        <small class="form-text text-muted">
-                            Pastikan file Excel memiliki kolom: Area, DP Date, DP No, Plant Name, QTY, Truck No, Sales Man, Distance, End Customer Name
-                        </small>
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="sidebar">
+                    <!-- Upload Section -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-title" id="upload-toggle">
+                            <i class="fas fa-file-excel"></i> Upload File Excel <i class="fas fa-chevron-down ms-auto"></i>
+                        </div>
+                        <div class="sidebar-content" id="upload-content">
+                            <div class="upload-area">
+                                <h5><i class="fas fa-cloud-upload-alt"></i> Upload File</h5>
+                                <p class="small">File harus berformat Excel (.xlsx) dengan ukuran 2MB - 30MB</p>
+                                <input type="file" id="file-upload" class="form-control" accept=".xlsx, .xls">
+                                <div class="mt-2">
+                                    <small class="form-text">
+                                        Pastikan file Excel memiliki kolom: Area, DP Date, DP No, Plant Name, QTY, Truck No, Sales Man, Distance, End Customer Name
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Filter Section -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="filter-section">
-                    <h5 class="filter-toggle" data-bs-toggle="collapse" href="#filterCollapse">
-                        <i class="fas fa-filter"></i> Filter Data <i class="fas fa-chevron-down"></i>
-                    </h5>
-                    <div class="collapse show" id="filterCollapse">
-                        <div class="row">
-                            <div class="col-md-4 mb-2">
-                                <label for="area-filter" class="form-label">Area</label>
-                                <select class="form-select" id="area-filter" multiple>
-                                    <!-- Options akan diisi oleh JavaScript -->
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="start-date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start-date">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="end-date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end-date">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="plant-filter" class="form-label">Plant Name</label>
-                                <select class="form-select" id="plant-filter" multiple>
-                                    <!-- Options akan diisi oleh JavaScript -->
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="salesman-filter" class="form-label">Sales Man</label>
-                                <select class="form-select" id="salesman-filter" multiple>
-                                    <!-- Options akan diisi oleh JavaScript -->
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="customer-filter" class="form-label">End Customer Name</label>
-                                <select class="form-select" id="customer-filter" multiple>
-                                    <!-- Options akan diisi oleh JavaScript -->
-                                </select>
-                            </div>
-                            <div class="col-12 mt-2">
-                                <button class="btn btn-primary" id="apply-filters">Terapkan Filter</button>
-                                <button class="btn btn-secondary" id="reset-filters">Reset Filter</button>
+                    <!-- Filter Section -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-title" id="filter-toggle">
+                            <i class="fas fa-filter"></i> Filter Data <i class="fas fa-chevron-down ms-auto"></i>
+                        </div>
+                        <div class="sidebar-content" id="filter-content">
+                            <div class="filter-section">
+                                <div class="mb-2">
+                                    <button class="btn btn-sm btn-outline-light select-all-btn w-100" data-target="area-filter">Select All Areas</button>
+                                    <label for="area-filter" class="form-label">Area</label>
+                                    <select class="form-select" id="area-filter" multiple size="4">
+                                        <!-- Options akan diisi oleh JavaScript -->
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="start-date" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="start-date">
+                                </div>
+                                <div class="mb-2">
+                                    <label for="end-date" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="end-date">
+                                </div>
+                                <div class="mb-2">
+                                    <button class="btn btn-sm btn-outline-light select-all-btn w-100" data-target="plant-filter">Select All Plants</button>
+                                    <label for="plant-filter" class="form-label">Plant Name</label>
+                                    <select class="form-select" id="plant-filter" multiple size="4">
+                                        <!-- Options akan diisi oleh JavaScript -->
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <button class="btn btn-sm btn-outline-light select-all-btn w-100" data-target="salesman-filter">Select All Salesmen</button>
+                                    <label for="salesman-filter" class="form-label">Sales Man</label>
+                                    <select class="form-select" id="salesman-filter" multiple size="4">
+                                        <!-- Options akan diisi oleh JavaScript -->
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <button class="btn btn-sm btn-outline-light select-all-btn w-100" data-target="customer-filter">Select All Customers</button>
+                                    <label for="customer-filter" class="form-label">End Customer Name</label>
+                                    <select class="form-select" id="customer-filter" multiple size="4">
+                                        <!-- Options akan diisi oleh JavaScript -->
+                                    </select>
+                                </div>
+                                <div class="d-grid gap-2 mt-3">
+                                    <button class="btn btn-primary" id="apply-filters">Terapkan Filter</button>
+                                    <button class="btn btn-secondary" id="reset-filters">Reset Filter</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- KPI Section -->
-        <div class="row mb-4">
-            <div class="col-md-2 col-sm-6">
-                <div class="kpi-card">
-                    <div class="kpi-value" id="total-area">0</div>
-                    <div class="kpi-label">Total Area</div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="kpi-card">
-                    <div class="kpi-value" id="total-plant">0</div>
-                    <div class="kpi-label">Total Plant</div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="kpi-card">
-                    <div class="kpi-value" id="total-volume">0</div>
-                    <div class="kpi-label">Total Volume</div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="kpi-card">
-                    <div class="kpi-value" id="avg-volume">0</div>
-                    <div class="kpi-label">Avg Volume</div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="kpi-card">
-                    <div class="kpi-value" id="total-tm">0</div>
-                    <div class="kpi-label">Total TM</div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="kpi-card">
-                    <div class="kpi-value" id="avg-load-trip">0</div>
-                    <div class="kpi-label">Avg Load/Trip</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Navigation -->
-        <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="logistic-tab" data-bs-toggle="tab" data-bs-target="#logistic" type="button" role="tab" aria-controls="logistic" aria-selected="true">
-                    <i class="fas fa-truck"></i> Logistic
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab" aria-controls="sales" aria-selected="false">
-                    <i class="fas fa-chart-line"></i> Sales And End Customer Performance
-                </button>
-            </li>
-        </ul>
-
-        <!-- Tab Content -->
-        <div class="tab-content" id="dashboardTabContent">
-            <!-- Logistic Tab -->
-            <div class="tab-pane fade show active" id="logistic" role="tabpanel" aria-labelledby="logistic-tab">
+            <!-- Main Content -->
+            <div class="col-lg-9 main-content">
+                <!-- KPI Section -->
                 <div class="row mb-4">
-                    <div class="col-12">
-                        <h4><span class="icon-box"><i class="fas fa-chart-bar"></i></span> Delivery Performance</h4>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Total Volume Delivery Per Area</div>
-                            <canvas id="volume-per-area-chart"></canvas>
+                    <div class="col-md-2 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="total-area">0</div>
+                            <div class="kpi-label">Total Area</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Total Volume Delivery Per Plant Name</div>
-                            <canvas id="volume-per-plant-chart"></canvas>
+                    <div class="col-md-2 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="total-plant">0</div>
+                            <div class="kpi-label">Total Plant</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Avg Volume Delivery Per Area</div>
-                            <canvas id="avg-volume-area-chart"></canvas>
+                    <div class="col-md-2 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="total-volume">0</div>
+                            <div class="kpi-label">Total Volume</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Avg Volume Delivery Per Plant Name</div>
-                            <canvas id="avg-volume-plant-chart"></canvas>
+                    <div class="col-md-2 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="avg-volume">0</div>
+                            <div class="kpi-label">Avg Volume Per Plant</div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="row mb-4 mt-4">
-                    <div class="col-12">
-                        <h4><span class="icon-box"><i class="fas fa-truck-loading"></i></span> Truck Utilization</h4>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Total Volume Delivery Per Truck No</div>
-                            <canvas id="volume-per-truck-chart"></canvas>
+                    <div class="col-md-2 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="total-tm">0</div>
+                            <div class="kpi-label">Total TM</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Total Trip per Truck No</div>
-                            <canvas id="trip-per-truck-chart"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Avg Load per Trip per Truck No</div>
-                            <canvas id="avg-load-truck-chart"></canvas>
+                    <div class="col-md-2 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="avg-load-trip">0</div>
+                            <div class="kpi-label">Avg Load/Trip</div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="row mb-4 mt-4">
-                    <div class="col-12">
-                        <h4><span class="icon-box"><i class="fas fa-route"></i></span> Distance</h4>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Avg Distance Per Area</div>
-                            <canvas id="avg-distance-area-chart"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Avg Distance Per Plant Name</div>
-                            <canvas id="avg-distance-plant-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Sales Tab -->
-            <div class="tab-pane fade" id="sales" role="tabpanel" aria-labelledby="sales-tab">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Total Volume Per Sales Man</div>
-                            <canvas id="volume-salesman-chart"></canvas>
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="logistic-tab" data-bs-toggle="tab" data-bs-target="#logistic" type="button" role="tab" aria-controls="logistic" aria-selected="true">
+                            <i class="fas fa-truck"></i> Logistic
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab" aria-controls="sales" aria-selected="false">
+                            <i class="fas fa-chart-line"></i> Sales And End Customer Performance
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="dashboardTabContent">
+                    <!-- Logistic Tab -->
+                    <div class="tab-pane fade show active" id="logistic" role="tabpanel" aria-labelledby="logistic-tab">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h4><span class="icon-box"><i class="fas fa-chart-bar"></i></span> Delivery Performance</h4>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Total Volume Delivery Per Area</div>
+                                    <canvas id="volume-per-area-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Total Volume Delivery Per Plant Name</div>
+                                    <canvas id="volume-per-plant-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Avg Volume Delivery Per Area</div>
+                                    <canvas id="avg-volume-area-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Avg Volume Delivery Per Plant Name</div>
+                                    <canvas id="avg-volume-plant-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4 mt-4">
+                            <div class="col-12">
+                                <h4><span class="icon-box"><i class="fas fa-truck-loading"></i></span> Truck Utilization</h4>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Total Volume Delivery Per Truck No</div>
+                                    <canvas id="volume-per-truck-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Total Trip per Truck No</div>
+                                    <canvas id="trip-per-truck-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Avg Load per Trip per Truck No</div>
+                                    <canvas id="avg-load-truck-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4 mt-4">
+                            <div class="col-12">
+                                <h4><span class="icon-box"><i class="fas fa-route"></i></span> Distance</h4>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Avg Distance Per Area</div>
+                                    <canvas id="avg-distance-area-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Avg Distance Per Plant Name</div>
+                                    <canvas id="avg-distance-plant-chart"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="chart-container">
-                            <div class="chart-title">Total Volume Per End Customer Name</div>
-                            <canvas id="volume-customer-chart"></canvas>
+
+                    <!-- Sales Tab -->
+                    <div class="tab-pane fade" id="sales" role="tabpanel" aria-labelledby="sales-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Total Volume Per Sales Man</div>
+                                    <canvas id="volume-salesman-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <div class="chart-title">Total Volume Per End Customer Name</div>
+                                    <canvas id="volume-customer-chart"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -401,6 +524,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateLastUpdateTime();
             
+            // Setup sidebar toggle
+            document.getElementById('upload-toggle').addEventListener('click', function() {
+                const content = document.getElementById('upload-content');
+                const icon = this.querySelector('.fa-chevron-down');
+                content.classList.toggle('collapsed');
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+            });
+            
+            document.getElementById('filter-toggle').addEventListener('click', function() {
+                const content = document.getElementById('filter-content');
+                const icon = this.querySelector('.fa-chevron-down');
+                content.classList.toggle('collapsed');
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+            });
+            
             // Event listener untuk upload file
             document.getElementById('file-upload').addEventListener('change', handleFileUpload);
             
@@ -410,6 +550,17 @@
             
             // Event listener untuk area filter change (untuk update plant filter)
             document.getElementById('area-filter').addEventListener('change', updatePlantFilterOptions);
+            
+            // Event listener untuk select all buttons
+            document.querySelectorAll('.select-all-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const selectElement = document.getElementById(targetId);
+                    Array.from(selectElement.options).forEach(option => {
+                        option.selected = true;
+                    });
+                });
+            });
         });
         
         // Handle file upload
@@ -608,9 +759,12 @@
             const totalVolume = filteredData.reduce((sum, item) => sum + (Number(item.QTY) || 0), 0);
             document.getElementById('total-volume').textContent = totalVolume.toLocaleString();
             
-            // Avg Volume
-            const avgVolume = filteredData.length > 0 ? totalVolume / filteredData.length : 0;
-            document.getElementById('avg-volume').textContent = avgVolume.toFixed(2);
+            // Avg Volume Per Plant
+            const plantVolumeData = groupDataByNormalizedKey(filteredData, 'Plant Name');
+            const totalPlantVolume = Object.values(plantVolumeData).reduce((sum, item) => sum + item.total, 0);
+            const plantCount = Object.keys(plantVolumeData).length;
+            const avgVolumePerPlant = plantCount > 0 ? totalPlantVolume / plantCount : 0;
+            document.getElementById('avg-volume').textContent = avgVolumePerPlant.toFixed(2);
             
             // Total TM (Truck No)
             const totalTM = new Set(filteredData.map(item => normalizeString(item['Truck No']))).size;
@@ -669,7 +823,7 @@
             return grouped;
         }
         
-        // Chart: Total Volume Delivery Per Area
+        // Chart: Total Volume Delivery Per Area (PIE CHART)
         function updateVolumePerAreaChart() {
             const areaData = groupDataByNormalizedKey(filteredData, 'Area');
             
@@ -678,23 +832,47 @@
                 charts['volumePerArea'].destroy();
             }
             
+            // Warna untuk chart
+            const backgroundColors = [
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(201, 203, 207, 0.7)',
+                'rgba(255, 205, 86, 0.7)',
+                'rgba(100, 180, 135, 0.7)',
+                'rgba(200, 100, 135, 0.7)',
+                'rgba(150, 150, 235, 0.7)'
+            ];
+            
             charts['volumePerArea'] = new Chart(ctx, {
-                type: 'bar',
+                type: 'pie',
                 data: {
                     labels: Object.values(areaData).map(item => item.originalKey),
                     datasets: [{
-                        label: 'Total Volume',
                         data: Object.values(areaData).map(item => item.total),
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: backgroundColors,
+                        borderColor: 'white',
                         borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
                         }
                     }
                 }
