@@ -235,22 +235,29 @@
             color: #2c3e50;
             margin-bottom: 5px;
         }
-        .chart-controls {
-            margin-bottom: 10px;
-            text-align: right;
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: none;
         }
-        .chart-type-btn {
-            font-size: 12px;
-            padding: 3px 8px;
-            margin-left: 5px;
-            background-color: #e9ecef;
-            border: 1px solid #ced4da;
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .file-info {
+            margin-top: 10px;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px;
             border-radius: 4px;
-            cursor: pointer;
-        }
-        .chart-type-btn.active {
-            background-color: #4361ee;
-            color: white;
+            display: none;
         }
     </style>
 </head>
@@ -272,6 +279,17 @@
                         <h4><i class="fas fa-file-excel me-2"></i>Upload File Excel</h4>
                         <p>File harus berformat Excel (.xlsx) dengan ukuran 2MB - 30MB</p>
                         <input type="file" id="file-upload" class="form-control" accept=".xlsx, .xls">
+                        <div class="file-info" id="file-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span id="file-name">No file chosen</span>
+                            <span id="file-size"></span>
+                        </div>
+                        <div class="alert alert-success" id="upload-success">
+                            <i class="fas fa-check-circle me-1"></i> File berhasil diupload!
+                        </div>
+                        <div class="alert alert-danger" id="upload-error">
+                            <i class="fas fa-exclamation-circle me-1"></i> <span id="error-message"></span>
+                        </div>
                         <div class="mt-2">
                             <small class="form-text">
                                 Pastikan file Excel memiliki kolom: Area, DP Date, DP No, Plant Name, QTY, Truck No, Sales Man, Distance, End Customer Name
@@ -567,16 +585,41 @@
             return `${day}/${month}/${year}`;
         }
         
-        // Parse tanggal dari format DD/MM/YYYY
+        // Parse tanggal dari berbagai format
         function parseDate(dateStr) {
             if (!dateStr) return null;
             
+            // Coba parsing dari format Excel (serial number)
+            if (typeof dateStr === 'number') {
+                const excelEpoch = new Date(1899, 11, 30);
+                const date = new Date(excelEpoch.getTime() + dateStr * 24 * 60 * 60 * 1000);
+                if (!isNaN(date.getTime())) {
+                    return date;
+                }
+            }
+            
             // Coba parsing dari format DD/MM/YYYY
-            const parts = dateStr.split('/');
+            const parts = dateStr.toString().split('/');
             if (parts.length === 3) {
                 const day = parseInt(parts[0], 10);
                 const month = parseInt(parts[1], 10) - 1;
                 const year = parseInt(parts[2], 10);
+                
+                // Jika tahun hanya 2 digit, asumsikan abad ke-20
+                const fullYear = year < 100 ? 2000 + year : year;
+                
+                const date = new Date(fullYear, month, day);
+                if (!isNaN(date.getTime())) {
+                    return date;
+                }
+            }
+            
+            // Coba parsing dari format YYYY-MM-DD
+            const isoParts = dateStr.toString().split('-');
+            if (isoParts.length === 3) {
+                const year = parseInt(isoParts[0], 10);
+                const month = parseInt(isoParts[1], 10) - 1;
+                const day = parseInt(isoParts[2], 10);
                 
                 const date = new Date(year, month, day);
                 if (!isNaN(date.getTime())) {
@@ -584,7 +627,7 @@
                 }
             }
             
-            // Fallback ke parsing default
+            // Fallback ke parsing default JavaScript
             const date = new Date(dateStr);
             return isNaN(date.getTime()) ? null : date;
         }
@@ -602,9 +645,51 @@
             document.getElementById('last-update').textContent = `Last Update: ${formattedDate}`;
         }
         
+        // Tampilkan informasi file
+        function updateFileInfo(file) {
+            if (file) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-size').textContent = ` (${fileSizeMB} MB)`;
+                document.getElementById('file-info').style.display = 'block';
+            } else {
+                document.getElementById('file-info').style.display = 'none';
+            }
+        }
+        
+        // Tampilkan pesan sukses
+        function showSuccess(message) {
+            const successElement = document.getElementById('upload-success');
+            if (message) {
+                successElement.innerHTML = `<i class="fas fa-check-circle me-1"></i> ${message}`;
+            }
+            successElement.style.display = 'block';
+            document.getElementById('upload-error').style.display = 'none';
+            
+            // Sembunyikan pesan setelah 3 detik
+            setTimeout(() => {
+                successElement.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Tampilkan pesan error
+        function showError(message) {
+            const errorElement = document.getElementById('upload-error');
+            errorElement.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> ${message}`;
+            errorElement.style.display = 'block';
+            document.getElementById('upload-success').style.display = 'none';
+        }
+        
+        // Sembunyikan semua pesan
+        function hideMessages() {
+            document.getElementById('upload-success').style.display = 'none';
+            document.getElementById('upload-error').style.display = 'none';
+        }
+        
         // Inisialisasi
         document.addEventListener('DOMContentLoaded', function() {
             updateLastUpdateTime();
+            hideMessages();
             
             // Event listener untuk upload file
             document.getElementById('file-upload').addEventListener('change', handleFileUpload);
@@ -633,43 +718,91 @@
             const file = event.target.files[0];
             if (!file) return;
             
+            hideMessages();
+            updateFileInfo(file);
+            
             // Validasi ukuran file
             const fileSizeMB = file.size / (1024 * 1024);
             if (fileSizeMB < 2 || fileSizeMB > 30) {
-                alert('Ukuran file harus antara 2MB dan 30MB');
+                showError('Ukuran file harus antara 2MB dan 30MB');
+                return;
+            }
+            
+            // Validasi tipe file
+            if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+                showError('File harus berformat Excel (.xlsx atau .xls)');
                 return;
             }
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                
-                // Ambil data dari sheet pertama
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                
-                // Konversi format tanggal
-                jsonData.forEach(item => {
-                    if (item['DP Date']) {
-                        // Coba parsing dari berbagai format
-                        const parsedDate = parseDate(item['DP Date']);
-                        if (parsedDate) {
-                            item['DP Date'] = parsedDate.toISOString().split('T')[0];
-                        }
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Ambil data dari sheet pertama
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (jsonData.length === 0) {
+                        showError('File Excel tidak mengandung data');
+                        return;
                     }
-                });
-                
-                // Simpan data mentah
-                rawData = jsonData;
-                filteredData = [...rawData];
-                
-                // Update filter options
-                updateFilterOptions();
-                
-                // Proses data dan update dashboard
-                processData();
+                    
+                    // Validasi kolom yang diperlukan
+                    const requiredColumns = ['Area', 'DP Date', 'DP No', 'Plant Name', 'QTY', 'Truck No', 'Sales Man', 'Distance', 'End Customer Name'];
+                    const firstRow = jsonData[0];
+                    const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+                    
+                    if (missingColumns.length > 0) {
+                        showError(`Kolom yang diperlukan tidak ditemukan: ${missingColumns.join(', ')}`);
+                        return;
+                    }
+                    
+                    // Konversi format tanggal dan angka
+                    jsonData.forEach(item => {
+                        if (item['DP Date']) {
+                            const parsedDate = parseDate(item['DP Date']);
+                            if (parsedDate) {
+                                item['DP Date'] = parsedDate.toISOString().split('T')[0];
+                            }
+                        }
+                        
+                        // Pastikan QTY adalah angka
+                        if (item['QTY']) {
+                            item['QTY'] = Number(item['QTY']);
+                            if (isNaN(item['QTY'])) item['QTY'] = 0;
+                        }
+                        
+                        // Pastikan Distance adalah angka
+                        if (item['Distance']) {
+                            item['Distance'] = Number(item['Distance']);
+                            if (isNaN(item['Distance'])) item['Distance'] = 0;
+                        }
+                    });
+                    
+                    // Simpan data mentah
+                    rawData = jsonData;
+                    filteredData = [...rawData];
+                    
+                    // Update filter options
+                    updateFilterOptions();
+                    
+                    // Proses data dan update dashboard
+                    processData();
+                    
+                    showSuccess('File berhasil diupload dan data diproses!');
+                    
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    showError('Terjadi kesalahan saat memproses file: ' + error.message);
+                }
             };
+            
+            reader.onerror = function() {
+                showError('Terjadi kesalahan saat membaca file');
+            };
+            
             reader.readAsArrayBuffer(file);
         }
         
@@ -1340,9 +1473,6 @@
             const allTrucks = Object.values(truckData)
                 .sort((a, b) => b.total - a.total);
             
-            // Ambil 10 truck dengan volume tertinggi untuk chart terpisah
-            const topTrucks = allTrucks.slice(0, 10);
-            
             const ctx = document.getElementById('volume-per-truck-chart').getContext('2d');
             if (charts['volumePerTruck']) {
                 charts['volumePerTruck'].destroy();
@@ -1678,9 +1808,6 @@
             const allSalesmen = Object.values(salesmanData)
                 .sort((a, b) => b.total - a.total);
             
-            // Ambil 10 salesman dengan volume tertinggi untuk chart terpisah
-            const topSalesmen = allSalesmen.slice(0, 10);
-            
             const ctx = document.getElementById('volume-salesman-chart').getContext('2d');
             if (charts['volumeSalesman']) {
                 charts['volumeSalesman'].destroy();
@@ -1740,9 +1867,6 @@
             // Ambil semua customer untuk ditampilkan
             const allCustomers = Object.values(customerData)
                 .sort((a, b) => b.total - a.total);
-            
-            // Ambil 10 customer dengan volume tertinggi untuk chart terpisah
-            const topCustomers = allCustomers.slice(0, 10);
             
             const ctx = document.getElementById('volume-customer-chart').getContext('2d');
             if (charts['volumeCustomer']) {
